@@ -64,3 +64,33 @@ pub fn flatten_errors<'a, Iter, Err, T>(
         }
     }
 }
+
+pub fn wrap_err<'a, Iter, Err, T>(
+    parser: &'a impl Fn(&mut Iter) -> Result<T, Err>
+)
+    -> impl Fn(&mut Iter) -> Result<T, Vec<Err>> + 'a
+{
+    |iter| {
+        parser(iter).map_err(|err| vec![err])
+    }
+}
+
+pub fn echo_fst_err<'a, Iter, Err, T>(
+    parser: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+)
+    -> impl Fn(&mut Iter) -> Result<T, Err> + 'a
+{
+    |iter| {
+        parser(iter).map_err(|mut errs| errs.remove(0))
+    }
+}
+
+pub fn echo_lst_err<'a, Iter, Err, T>(
+    parser: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+)
+    -> impl Fn(&mut Iter) -> Result<T, Err> + 'a
+{
+    |iter| {
+        parser(iter).map_err(|mut errs| errs.remove(errs.len() - 1))
+    }
+}

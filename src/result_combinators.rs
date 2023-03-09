@@ -1,6 +1,6 @@
-
 // Monadic parser combinators
 
+// pure
 pub fn pure<'a, Iter, Err, T: Clone>(
     t: &'a T
 )
@@ -11,6 +11,7 @@ pub fn pure<'a, Iter, Err, T: Clone>(
     }
 }
 
+// <$>
 pub fn fmap<'a, Iter, Err, T, U>(
     parser: &'a impl Fn(&mut Iter) -> Result<T, Err>,
     f: &'a impl Fn(T) -> U
@@ -22,6 +23,7 @@ pub fn fmap<'a, Iter, Err, T, U>(
     }
 }
 
+// <*>
 pub fn apply<'a, Iter, Err, T, U, F: FnOnce(T) -> U>(
     f_parser: &'a impl Fn(&mut Iter) -> Result<F, Err>,
     t_parser: &'a impl Fn(&mut Iter) -> Result<T, Err>
@@ -126,6 +128,7 @@ pub fn apply4<'a, Iter, Err, T0, T1, T2, T3, U, F: FnOnce(T0, T1, T2, T3) -> U>(
     }
 }
 
+// >>=
 pub fn bind<'a, Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
     parser: &'a impl Fn(&mut Iter) -> Result<T, Err>,
     f: &'a impl Fn(T) -> UParser
@@ -220,3 +223,31 @@ pub fn bind4<'a, Iter, Err, T0, T1, T2, T3, U, UParser: FnOnce(&mut Iter) -> Res
         }
     }
 }
+
+// Alternative parser combinators
+
+// <|>
+pub fn otherwise<'a, Iter, Err, T>(
+    parser0: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>,
+    parser1: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+)
+    -> impl Fn(&mut Iter) -> Result<T, Vec<Err>> + 'a
+{
+    |iter| {
+        match parser0(iter) {
+            Result::Ok(t) => Result::Ok(t),
+            Result::Err(mut err0) => match parser1(iter) {
+                Result::Ok(t) => Result::Ok(t),
+                Result::Err(mut err1) => Result::Err({ err0.append(&mut err1); err0 })
+            }
+        }
+    }
+}
+
+macro_rules! alternative {
+    ($x:expr) => ($x);
+    ($x:expr, $($xs:expr),+) => (
+        otherwise($x, alternative!($($xs),+))
+    )
+}
+
