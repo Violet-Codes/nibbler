@@ -75,7 +75,7 @@ pub fn wrap_err<'a, Iter, Err, T>(
     }
 }
 
-pub fn echo_fst_err<'a, Iter, Err, T>(
+pub fn use_fst_err<'a, Iter, Err, T>(
     parser: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>
 )
     -> impl Fn(&mut Iter) -> Result<T, Err> + 'a
@@ -85,7 +85,7 @@ pub fn echo_fst_err<'a, Iter, Err, T>(
     }
 }
 
-pub fn echo_lst_err<'a, Iter, Err, T>(
+pub fn use_lst_err<'a, Iter, Err, T>(
     parser: &'a impl Fn(&mut Iter) -> Result<T, Vec<Err>>
 )
     -> impl Fn(&mut Iter) -> Result<T, Err> + 'a
