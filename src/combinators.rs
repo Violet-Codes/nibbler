@@ -1,16 +1,39 @@
-use super::{ alternative, errors::*, monadic::* };
+use super::{ alternative, select, errors::*, monadic::* };
 
-pub fn most_till<'a, Iter, Err, T, U>(
-    parser: &'a impl Fn(&mut Iter) -> Result<T, Err>,
-    end: &'a impl Fn(&mut Iter) -> Result<T, Err>
+pub fn most_till<Iter, Err, T, U>(
+    parser: impl Fn(&mut Iter) -> Result<T, Err>,
+    end: impl Fn(&mut Iter) -> Result<U, Err>
 )
-    -> impl Fn(&mut Iter) -> Result<(Vec<T>, U), Vec<Err>> + 'a
+    -> impl Fn(&mut Iter) -> Result<(Vec<T>, U), Vec<Err>>
 {
-    |iter| alternative!(
-        fmap2::<Iter, Vec<Err>, T, (Vec<T>, U), (Vec<T>, U)>(
-            & |t, (mut ts, u)| { ts.insert(0, t); (ts, u) },
-            & wrap_err(parser),
-            & most_till(parser, end)
-        )(iter)
-    )
+    move |iter| alternative! (
+        fmap2(
+            |t, (mut ts, u) | { ts.insert(0, t); (ts, u) },
+            wrap_err(& parser),
+            most_till(& parser, & end)
+        ),
+        fmap(
+            |u| (vec![], u),
+            wrap_err(& end)
+        )
+    )(iter)
+}
+
+pub fn least_till<Iter, Err, T, U>(
+    parser: impl Fn(&mut Iter) -> Result<T, Err>,
+    end: impl Fn(&mut Iter) -> Result<U, Err>
+)
+    -> impl Fn(&mut Iter) -> Result<(Vec<T>, U), Vec<Err>>
+{
+    move |iter| alternative! (
+        fmap(
+            |u| (vec![], u),
+            wrap_err(& end)
+        ),
+        fmap2(
+            |t, (mut ts, u) | { ts.insert(0, t); (ts, u) },
+            wrap_err(& parser),
+            most_till(& parser, & end)
+        )
+    )(iter)
 }
