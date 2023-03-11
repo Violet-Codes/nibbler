@@ -7,13 +7,14 @@ pub fn lense<Iter, Jter, Err, T>(
     move |jter| parser(sect(jter))
 }
 
-pub fn run<Iter, Jter, Err, T>(
+pub fn run<Iter, Jter, Err, T, U>(
     build: impl Fn(&mut Jter) -> Iter,
+    combine: impl Fn(&mut Iter, T) -> U,
     parser: impl Fn(&mut Iter) -> Result<T, Err>
 )
-    -> impl Fn(&mut Jter) -> Result<T, Err>
+    -> impl Fn(&mut Jter) -> Result<U, Err>
 {
-    move |jter| { let mut iter = build(jter); parser(&mut iter) }
+    move |jter| { let mut iter = build(jter); parser(&mut iter).map(|t| combine(&mut iter, t)) }
 }
 
 #[derive(Clone)]
@@ -113,7 +114,6 @@ impl<Iter: Iterator, State> Iterator for CustomIter<Iter, State> {
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
-
 }
 
 pub fn update_state<Iter, State, Err>(
@@ -124,29 +124,16 @@ pub fn update_state<Iter, State, Err>(
     move |iter| { f(&mut iter.state); Result::Ok(()) }
 }
 
-pub fn set_state<Iter, State: Clone, Err>(
-    s: State
+pub fn set_state<Iter, State, Err>(
+    prod: impl Fn() -> State
 )
     -> impl Fn(&mut CustomIter<Iter, State>) -> Result<(), Err>
 {
-    move |iter| { iter.state = s.clone(); Result::Ok(()) }
+    move |iter| { iter.state = prod(); Result::Ok(()) }
 }
 
 pub const fn get_state<Iter, State: Clone, Err>()
     -> impl Fn(&mut CustomIter<Iter, State>) -> Result<State, Err>
 {
     move |iter| Result::Ok(iter.state.clone())
-}
-
-pub fn run_state<Iter, State, Err, T>(
-    build: impl Fn(&Iter) -> State,
-    parser: impl Fn(&mut CustomIter<&mut Iter, State>) -> Result<T, Err>
-)
-    -> impl Fn(&mut Iter) -> Result<(State, T), Err>
-{
-    move |iter| {
-        let state = build(iter);
-        let mut jter = CustomIter{ iter: iter, state: state };
-        parser(&mut jter).map(|t| (jter.state, t))
-    }
 }

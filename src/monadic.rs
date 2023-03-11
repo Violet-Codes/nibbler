@@ -1,12 +1,12 @@
 // Monadic parser combinators
 
 // pure
-pub fn pure<Iter, Err, T: Clone>(
-    t: T
+pub fn pure<Iter, Err, T>(
+    prod: impl Fn() -> T
 )
     -> impl Fn(&mut Iter) -> Result<T, Err>
 {
-    move |_iter| Result::Ok(t.clone())
+    move |_iter| Result::Ok(prod())
 }
 
 // <$>
@@ -39,7 +39,7 @@ pub fn fmap2<Iter, Err, T, U, V>(
     }
 }
 
-pub fn fmap3<Iter, Err, T0, T1, T2, U, F: FnOnce(T0, T1, T2) -> U>(
+pub fn fmap3<Iter, Err, T0, T1, T2, U>(
     f: impl Fn(T0, T1, T2) -> U,
     t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
     t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
@@ -64,7 +64,7 @@ pub fn fmap3<Iter, Err, T0, T1, T2, U, F: FnOnce(T0, T1, T2) -> U>(
     }
 }
 
-pub fn fmap4<Iter, Err, T0, T1, T2, T3, U, F: FnOnce(T0, T1, T2, T3) -> U>(
+pub fn fmap4<Iter, Err, T0, T1, T2, T3, U>(
     f: impl Fn(T0, T1, T2, T3) -> U,
     t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
     t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
