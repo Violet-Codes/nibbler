@@ -1,6 +1,6 @@
 use super::parser;
 
-pub fn eos<Iter: Iterator, Err>(
+pub const fn eos<Iter: Iterator, Err>(
     msg: impl Fn(&Iter) -> Err
 )
     -> parser![Iter, Err, ()]
@@ -14,7 +14,7 @@ pub fn eos<Iter: Iterator, Err>(
     }
 }
 
-pub fn expect<Iter: Iterator, Err, const N: usize>(
+pub const fn expect<Iter: Iterator, Err, const N: usize>(
     a: [Iter::Item; N],
     msg: impl Fn(&Iter) -> Err
 )
@@ -35,7 +35,7 @@ where
     }
 }
 
-pub fn predicate<Iter: Iterator, Err, const N: usize>(
+pub const fn predicate<Iter: Iterator, Err, const N: usize>(
     f: impl Fn(& [Iter::Item; N]) -> bool,
     msg: impl Fn(&Iter) -> Err
 )

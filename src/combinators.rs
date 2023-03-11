@@ -1,6 +1,6 @@
 use super::{ alternative, parser, errors::*, monadic::* };
 
-pub fn most_till<Iter, Err, T, U>(
+pub const fn most_till<Iter, Err, T, U>(
     parser: parser![Iter, Err, T],
     end: parser![Iter, Err, U]
 )
@@ -19,7 +19,7 @@ pub fn most_till<Iter, Err, T, U>(
     )(iter)
 }
 
-pub fn least_till<Iter, Err, T, U>(
+pub const fn least_till<Iter, Err, T, U>(
     parser: parser![Iter, Err, T],
     end: parser![Iter, Err, U]
 )
@@ -38,7 +38,7 @@ pub fn least_till<Iter, Err, T, U>(
     )(iter)
 }
 
-pub fn most<Iter, Err, T>(
+pub const fn most<Iter, Err, T>(
     parser: parser![Iter, Err, T]
 )
     -> parser![Iter, Err, Vec<T>]
@@ -52,7 +52,7 @@ pub fn most<Iter, Err, T>(
     }
 }
 
-pub fn unwind<Iter: Clone, Err, T>(
+pub const fn unwind<Iter: Clone, Err, T>(
     parser: parser![Iter, Err, T]
 )
     -> parser![Iter, Err, T]

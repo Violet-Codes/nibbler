@@ -1,6 +1,6 @@
 use super::parser;
 
-pub fn fail<Iter, Err, T>(
+pub const fn fail<Iter, Err, T>(
     msg: impl Fn(&Iter) -> Err
 )
     -> parser![Iter, Err, T]
@@ -8,7 +8,7 @@ pub fn fail<Iter, Err, T>(
     move |iter| Result::Err(msg(iter))
 }
 
-pub fn fmap_err<Iter, Err, Frr, T>(
+pub const fn fmap_err<Iter, Err, Frr, T>(
     f: impl Fn(Err) -> Frr,
     parser: parser![Iter, Err, T]
 )
@@ -17,7 +17,7 @@ pub fn fmap_err<Iter, Err, Frr, T>(
     move |iter| parser(iter).map_err(& f)
 }
 
-pub fn try_parse<Iter: Clone, Err, T>(
+pub const fn try_parse<Iter: Clone, Err, T>(
     parser: parser![Iter, Err, T]
 )
     -> parser![Iter, Err, T]
@@ -31,7 +31,7 @@ pub fn try_parse<Iter: Clone, Err, T>(
     }
 }
 
-pub fn negate<Iter, Err, T>(
+pub const fn negate<Iter, Err, T>(
     parser: parser![Iter, Err, T]
 )
     -> parser![Iter, T, Err]
@@ -42,7 +42,7 @@ pub fn negate<Iter, Err, T>(
     }
 }
 
-pub fn recover_with<Iter, Err, Frr, T>(
+pub const fn recover_with<Iter, Err, Frr, T>(
     parser: parser![Iter, Err, T],
     recover: parser![Iter, Frr, ()]
 )
@@ -57,7 +57,7 @@ pub fn recover_with<Iter, Err, Frr, T>(
     }
 }
 
-pub fn flatten_errors<Iter, Err, T>(
+pub const fn flatten_errors<Iter, Err, T>(
     parser: parser![Iter, Err, Result<T, Err>]
 )
     -> parser![Iter, Err, T]
@@ -69,7 +69,7 @@ pub fn flatten_errors<Iter, Err, T>(
     }
 }
 
-pub fn wrap_err<Iter, Err, T>(
+pub const fn wrap_err<Iter, Err, T>(
     parser: parser![Iter, Err, T]
 )
     -> parser![Iter, Vec<Err>, T]
@@ -77,7 +77,7 @@ pub fn wrap_err<Iter, Err, T>(
     move |iter| parser(iter).map_err(|err| vec![err])
 }
 
-pub fn use_fst_err<Iter, Err, T>(
+pub const fn use_fst_err<Iter, Err, T>(
     parser: parser![Iter, Vec<Err>, T]
 )
     -> parser![Iter, Err, T]
@@ -85,7 +85,7 @@ pub fn use_fst_err<Iter, Err, T>(
     move |iter| parser(iter).map_err(|mut errs| errs.remove(0))
 }
 
-pub fn use_lst_err<Iter, Err, T>(
+pub const fn use_lst_err<Iter, Err, T>(
     parser: parser![Iter, Vec<Err>, T]
 )
     -> parser![Iter, Err, T]

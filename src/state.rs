@@ -1,6 +1,6 @@
 use super::parser;
 
-pub fn lense<Iter, Jter, Err, T>(
+pub const fn lense<Iter, Jter, Err, T>(
     sect: impl Fn(&mut Jter) -> &mut Iter,
     parser: parser![Iter, Err, T]
 )
@@ -9,7 +9,7 @@ pub fn lense<Iter, Jter, Err, T>(
     move |jter| parser(sect(jter))
 }
 
-pub fn run<Iter, Jter, Err, T, U>(
+pub const fn run<Iter, Jter, Err, T, U>(
     build: impl Fn(&mut Jter) -> Iter,
     combine: impl Fn(&mut Iter, T) -> U,
     parser: parser![Iter, Err, T]
@@ -57,7 +57,7 @@ impl<Iter: Iterator, Symbol> Iterator for StackIter<Iter, Symbol> {
     }
 }
 
-pub fn stack_action<Iter, Symbol: Clone + PartialEq, Err, const N: usize>(
+pub const fn stack_action<Iter, Symbol: Clone + PartialEq, Err, const N: usize>(
     actions: [(bool, Symbol); N],
     pop_msg: impl Fn(&Iter, Symbol, Option<Symbol>) -> Err
 )
@@ -77,7 +77,7 @@ pub fn stack_action<Iter, Symbol: Clone + PartialEq, Err, const N: usize>(
     }
 }
 
-pub fn stack_push<Iter, Symbol: Clone + PartialEq, Err>(
+pub const fn stack_push<Iter, Symbol: Clone + PartialEq, Err>(
     a: Symbol
 )
     -> parser![StackIter<Iter, Symbol>, Err, ()]
@@ -88,7 +88,7 @@ pub fn stack_push<Iter, Symbol: Clone + PartialEq, Err>(
     }
 }
 
-pub fn stack_pop<Iter, Symbol: Clone + PartialEq, Err>(
+pub const fn stack_pop<Iter, Symbol: Clone + PartialEq, Err>(
     a: Symbol,
     pop_msg: impl Fn(&Iter, Symbol, Option<Symbol>) -> Err
 )
@@ -118,7 +118,7 @@ impl<Iter: Iterator, State> Iterator for CustomIter<Iter, State> {
     }
 }
 
-pub fn update_state<Iter, State, Err>(
+pub const fn update_state<Iter, State, Err>(
     f: impl Fn(&mut State)
 )
     -> parser![CustomIter<Iter, State>, Err, ()]
@@ -126,7 +126,7 @@ pub fn update_state<Iter, State, Err>(
     move |iter| { f(&mut iter.state); Result::Ok(()) }
 }
 
-pub fn set_state<Iter, State, Err>(
+pub const fn set_state<Iter, State, Err>(
     prod: impl Fn() -> State
 )
     -> parser![CustomIter<Iter, State>, Err, ()]
