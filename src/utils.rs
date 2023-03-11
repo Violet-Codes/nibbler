@@ -1,4 +1,3 @@
-
 fn result_append<Err, T>(
     resvec: &mut Result<Vec<T>, Vec<Err>>,
     resval: Result<T, Err>
