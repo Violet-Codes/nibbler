@@ -1,10 +1,10 @@
-use super::{ alternative, errors::*, monadic::* };
+use super::{ alternative, parser, errors::*, monadic::* };
 
 pub fn most_till<Iter, Err, T, U>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    end: impl Fn(&mut Iter) -> Result<U, Err>
+    parser: parser![Iter, Err, T],
+    end: parser![Iter, Err, U]
 )
-    -> impl Fn(&mut Iter) -> Result<(Vec<T>, U), Vec<Err>>
+    -> parser![Iter, Vec<Err>, (Vec<T>, U)]
 {
     move |iter| alternative! (
         fmap2(
@@ -20,10 +20,10 @@ pub fn most_till<Iter, Err, T, U>(
 }
 
 pub fn least_till<Iter, Err, T, U>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    end: impl Fn(&mut Iter) -> Result<U, Err>
+    parser: parser![Iter, Err, T],
+    end: parser![Iter, Err, U]
 )
-    -> impl Fn(&mut Iter) -> Result<(Vec<T>, U), Vec<Err>>
+    -> parser![Iter, Vec<Err>, (Vec<T>, U)]
 {
     move |iter| alternative! (
         fmap(
@@ -39,9 +39,9 @@ pub fn least_till<Iter, Err, T, U>(
 }
 
 pub fn most<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<Vec<T>, Err>
+    -> parser![Iter, Err, Vec<T>]
 {
     move |iter| {
         let mut ts: Vec<T> = vec![];
@@ -53,9 +53,9 @@ pub fn most<Iter, Err, T>(
 }
 
 pub fn unwind<Iter: Clone, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| {
         let pre: Iter = iter.clone();

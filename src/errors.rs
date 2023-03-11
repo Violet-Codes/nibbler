@@ -1,24 +1,26 @@
+use super::parser;
+
 pub fn fail<Iter, Err, T>(
     msg: impl Fn(&Iter) -> Err
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| Result::Err(msg(iter))
 }
 
 pub fn fmap_err<Iter, Err, Frr, T>(
     f: impl Fn(Err) -> Frr,
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Frr>
+    -> parser![Iter, Frr, T]
 {
     move |iter| parser(iter).map_err(& f)
 }
 
 pub fn try_parse<Iter: Clone, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| {
         let pre: Iter = iter.clone();
@@ -30,9 +32,9 @@ pub fn try_parse<Iter: Clone, Err, T>(
 }
 
 pub fn negate<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<Err, T>
+    -> parser![Iter, T, Err]
 {
     move |iter| match parser(iter) {
         Result::Ok(t) => Result::Err(t),
@@ -41,10 +43,10 @@ pub fn negate<Iter, Err, T>(
 }
 
 pub fn recover_with<Iter, Err, Frr, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    recover: impl Fn(&mut Iter) -> Result<(), Frr>
+    parser: parser![Iter, Err, T],
+    recover: parser![Iter, Frr, ()]
 )
-    -> impl Fn(&mut Iter) -> Result<Result<T, Err>, Frr>
+    -> parser![Iter, Frr, Result<T, Err>]
 {
     move |iter| match parser(iter) {
         Result::Ok(t) => Result::Ok(Result::Ok(t)),
@@ -56,9 +58,9 @@ pub fn recover_with<Iter, Err, Frr, T>(
 }
 
 pub fn flatten_errors<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<Result<T, Err>, Err>
+    parser: parser![Iter, Err, Result<T, Err>]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| match parser(iter) {
         Result::Ok(Result::Ok(t)) => Result::Ok(t),
@@ -68,25 +70,25 @@ pub fn flatten_errors<Iter, Err, T>(
 }
 
 pub fn wrap_err<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+    -> parser![Iter, Vec<Err>, T]
 {
     move |iter| parser(iter).map_err(|err| vec![err])
 }
 
 pub fn use_fst_err<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+    parser: parser![Iter, Vec<Err>, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| parser(iter).map_err(|mut errs| errs.remove(0))
 }
 
 pub fn use_lst_err<Iter, Err, T>(
-    parser: impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+    parser: parser![Iter, Vec<Err>, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |iter| parser(iter).map_err(|mut errs| errs.remove(errs.len() - 1))
 }

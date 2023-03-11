@@ -1,10 +1,10 @@
-// Monadic parser combinators
+use super::parser;
 
 // pure
 pub fn pure<Iter, Err, T>(
     prod: impl Fn() -> T
 )
-    -> impl Fn(&mut Iter) -> Result<T, Err>
+    -> parser![Iter, Err, T]
 {
     move |_iter| Result::Ok(prod())
 }
@@ -12,19 +12,19 @@ pub fn pure<Iter, Err, T>(
 // <$>
 pub fn fmap<Iter, Err, T, U>(
     f: impl Fn(T) -> U,
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| parser(iter).map(& f)
 }
 
 pub fn fmap2<Iter, Err, T, U, V>(
     f: impl Fn(T, U) -> V,
-    t_parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    u_parser: impl Fn(&mut Iter) -> Result<U, Err>
+    t_parser: parser![Iter, Err, T],
+    u_parser: parser![Iter, Err, U]
 )
-    -> impl Fn(&mut Iter) -> Result<V, Err>
+    -> parser![Iter, Err, V]
 {
     move |iter| 'parse_args: loop {
         let t: T = match t_parser(iter) {
@@ -41,11 +41,11 @@ pub fn fmap2<Iter, Err, T, U, V>(
 
 pub fn fmap3<Iter, Err, T0, T1, T2, U>(
     f: impl Fn(T0, T1, T2) -> U,
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| 'parse_args: loop {
         let t0: T0 = match t0_parser(iter) {
@@ -66,12 +66,12 @@ pub fn fmap3<Iter, Err, T0, T1, T2, U>(
 
 pub fn fmap4<Iter, Err, T0, T1, T2, T3, U>(
     f: impl Fn(T0, T1, T2, T3) -> U,
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>,
-    t3_parser: impl Fn(&mut Iter) -> Result<T3, Err>
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2],
+    t3_parser: parser![Iter, Err, T3]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| 'parse_args: loop {
         let t0: T0 = match t0_parser(iter) {
@@ -96,10 +96,10 @@ pub fn fmap4<Iter, Err, T0, T1, T2, T3, U>(
 
 // <*>
 pub fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
-    f_parser: impl Fn(&mut Iter) -> Result<F, Err>,
-    t_parser: impl Fn(&mut Iter) -> Result<T, Err>
+    f_parser: parser![Iter, Err, F],
+    t_parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| match f_parser(iter) {
         Result::Ok(f) => t_parser(iter).map(f),
@@ -108,11 +108,11 @@ pub fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
 }
 
 pub fn apply2<Iter, Err, T, U, V, F: FnOnce(T, U) -> V>(
-    f_parser: impl Fn(&mut Iter) -> Result<F, Err>,
-    t_parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    u_parser: impl Fn(&mut Iter) -> Result<U, Err>
+    f_parser: parser![Iter, Err, F],
+    t_parser: parser![Iter, Err, T],
+    u_parser: parser![Iter, Err, U]
 )
-    -> impl Fn(&mut Iter) -> Result<V, Err>
+    -> parser![Iter, Err, V]
 {
     move |iter| match f_parser(iter) {
         Result::Ok(f) => 'parse_args: loop {
@@ -131,12 +131,12 @@ pub fn apply2<Iter, Err, T, U, V, F: FnOnce(T, U) -> V>(
 }
 
 pub fn apply3<Iter, Err, T0, T1, T2, U, F: FnOnce(T0, T1, T2) -> U>(
-    f_parser: impl Fn(&mut Iter) -> Result<F, Err>,
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>
+    f_parser: parser![Iter, Err, F],
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| match f_parser(iter) {
         Result::Ok(f) => 'parse_args: loop {
@@ -159,13 +159,13 @@ pub fn apply3<Iter, Err, T0, T1, T2, U, F: FnOnce(T0, T1, T2) -> U>(
 }
 
 pub fn apply4<Iter, Err, T0, T1, T2, T3, U, F: FnOnce(T0, T1, T2, T3) -> U>(
-    f_parser: impl Fn(&mut Iter) -> Result<F, Err>,
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>,
-    t3_parser: impl Fn(&mut Iter) -> Result<T3, Err>
+    f_parser: parser![Iter, Err, F],
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2],
+    t3_parser: parser![Iter, Err, T3]
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| match f_parser(iter) {
         Result::Ok(f) => 'parse_args: loop {
@@ -193,10 +193,10 @@ pub fn apply4<Iter, Err, T0, T1, T2, T3, U, F: FnOnce(T0, T1, T2, T3) -> U>(
 
 // >>=
 pub fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
-    parser: impl Fn(&mut Iter) -> Result<T, Err>,
+    parser: parser![Iter, Err, T],
     f: impl Fn(T) -> UParser
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| match parser(iter) {
         Result::Ok(t) => f(t)(iter),
@@ -205,11 +205,11 @@ pub fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
 }
 
 pub fn bind2<Iter, Err, T, U, V, VParser: FnOnce(&mut Iter) -> Result<V, Err>>(
-    t_parser: impl Fn(&mut Iter) -> Result<T, Err>,
-    u_parser: impl Fn(&mut Iter) -> Result<U, Err>,
+    t_parser: parser![Iter, Err, T],
+    u_parser: parser![Iter, Err, U],
     f: impl Fn(T, U) -> VParser
 )
-    -> impl Fn(&mut Iter) -> Result<V, Err>
+    -> parser![Iter, Err, V]
 {
     move |iter| 'parse_args: loop {
         let t: T = match t_parser(iter) {
@@ -225,12 +225,12 @@ pub fn bind2<Iter, Err, T, U, V, VParser: FnOnce(&mut Iter) -> Result<V, Err>>(
 }
 
 pub fn bind3<Iter, Err, T0, T1, T2, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>,
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2],
     f: impl Fn(T0, T1, T2) -> UParser
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| 'parse_args: loop {
         let t0: T0 = match t0_parser(iter) {
@@ -250,13 +250,13 @@ pub fn bind3<Iter, Err, T0, T1, T2, U, UParser: FnOnce(&mut Iter) -> Result<U, E
 }
 
 pub fn bind4<Iter, Err, T0, T1, T2, T3, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
-    t0_parser: impl Fn(&mut Iter) -> Result<T0, Err>,
-    t1_parser: impl Fn(&mut Iter) -> Result<T1, Err>,
-    t2_parser: impl Fn(&mut Iter) -> Result<T2, Err>,
-    t3_parser: impl Fn(&mut Iter) -> Result<T3, Err>,
+    t0_parser: parser![Iter, Err, T0],
+    t1_parser: parser![Iter, Err, T1],
+    t2_parser: parser![Iter, Err, T2],
+    t3_parser: parser![Iter, Err, T3],
     f: impl Fn(T0, T1, T2, T3) -> UParser
 )
-    -> impl Fn(&mut Iter) -> Result<U, Err>
+    -> parser![Iter, Err, U]
 {
     move |iter| 'parse_args: loop {
         let t0: T0 = match t0_parser(iter) {
@@ -279,15 +279,12 @@ pub fn bind4<Iter, Err, T0, T1, T2, T3, U, UParser: FnOnce(&mut Iter) -> Result<
     }
 }
 
-// Alternative parser combinators
-
 // <|>
-// Vec generalises any associative error combination
 pub fn otherwise<Iter, Err, T>(
-    parser0: impl Fn(&mut Iter) -> Result<T, Vec<Err>>,
-    parser1: impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+    parser0: parser![Iter, Vec<Err>, T],
+    parser1: parser![Iter, Vec<Err>, T]
 )
-    -> impl Fn(&mut Iter) -> Result<T, Vec<Err>>
+    -> parser![Iter, Vec<Err>, T]
 {
     move |iter| match parser0(iter) {
         Result::Ok(t) => Result::Ok(t),

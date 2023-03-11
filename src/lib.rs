@@ -9,6 +9,11 @@ mod state;
 
 // parser: impl Fn(&mut: Iter) -> Result<Res, Err>
 
+#[macro_export]
+macro_rules! parser {
+    ($iter:ty, $err:ty, $t:ty) => (impl Fn(&mut $iter) -> Result<$t, $err>)
+}
+
 // <|>
 #[macro_export]
 macro_rules! alternative {

@@ -1,7 +1,9 @@
+use super::parser;
+
 pub fn eos<Iter: Iterator, Err>(
     msg: impl Fn(&Iter) -> Err
 )
-    -> impl Fn(&mut Iter) -> Result<(), Err>
+    -> parser![Iter, Err, ()]
 {
     move |iter| {
         let err = msg(iter);
@@ -16,7 +18,7 @@ pub fn expect<Iter: Iterator, Err, const N: usize>(
     a: [Iter::Item; N],
     msg: impl Fn(&Iter) -> Err
 )
-    -> impl Fn(&mut Iter) -> Result<[Iter::Item; N], Err>
+    -> parser![Iter, Err, [Iter::Item; N]]
 where
     Iter::Item: PartialEq
 {
@@ -37,7 +39,7 @@ pub fn predicate<Iter: Iterator, Err, const N: usize>(
     f: impl Fn(& [Iter::Item; N]) -> bool,
     msg: impl Fn(&Iter) -> Err
 )
-    -> impl Fn(&mut Iter) -> Result<[Iter::Item; N], Err>
+    -> parser![Iter, Err, [Iter::Item; N]]
 {
     move |iter| {
         let err = msg(iter);

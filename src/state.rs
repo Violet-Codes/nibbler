@@ -1,8 +1,10 @@
+use super::parser;
+
 pub fn lense<Iter, Jter, Err, T>(
     sect: impl Fn(&mut Jter) -> &mut Iter,
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Jter) -> Result<T, Err>
+    -> parser![Jter, Err, T]
 {
     move |jter| parser(sect(jter))
 }
@@ -10,9 +12,9 @@ pub fn lense<Iter, Jter, Err, T>(
 pub fn run<Iter, Jter, Err, T, U>(
     build: impl Fn(&mut Jter) -> Iter,
     combine: impl Fn(&mut Iter, T) -> U,
-    parser: impl Fn(&mut Iter) -> Result<T, Err>
+    parser: parser![Iter, Err, T]
 )
-    -> impl Fn(&mut Jter) -> Result<U, Err>
+    -> parser![Jter, Err, U]
 {
     move |jter| { let mut iter = build(jter); parser(&mut iter).map(|t| combine(&mut iter, t)) }
 }
@@ -36,7 +38,7 @@ impl<Iter: Iterator> Iterator for CountIter<Iter> {
 }
 
 pub const fn count<Iter, Err>()
-    -> impl Fn(&mut CountIter<Iter>) -> Result<usize, Err>
+    -> parser![CountIter<Iter>, Err, usize]
 {
     |iter| Result::Ok(iter.munched)
 }
@@ -59,7 +61,7 @@ pub fn stack_action<Iter, Symbol: Clone + PartialEq, Err, const N: usize>(
     actions: [(bool, Symbol); N],
     pop_msg: impl Fn(&Iter, Symbol, Option<Symbol>) -> Err
 )
-    -> impl Fn(&mut StackIter<Iter, Symbol>) -> Result<(), Err>
+    -> parser![StackIter<Iter, Symbol>, Err, ()]
 {
     move |iter| {
         for action in actions.iter() {
@@ -78,7 +80,7 @@ pub fn stack_action<Iter, Symbol: Clone + PartialEq, Err, const N: usize>(
 pub fn stack_push<Iter, Symbol: Clone + PartialEq, Err>(
     a: Symbol
 )
-    -> impl Fn(&mut StackIter<Iter, Symbol>) -> Result<(), Err>
+    -> parser![StackIter<Iter, Symbol>, Err, ()]
 {
     move |iter| {
         iter.stack.push(a.clone());
@@ -90,7 +92,7 @@ pub fn stack_pop<Iter, Symbol: Clone + PartialEq, Err>(
     a: Symbol,
     pop_msg: impl Fn(&Iter, Symbol, Option<Symbol>) -> Err
 )
-    -> impl Fn(&mut StackIter<Iter, Symbol>) -> Result<(), Err>
+    -> parser![StackIter<Iter, Symbol>, Err, ()]
 {
     move |iter| match iter.stack.pop() {
         Option::Some(b) => if a != b {
@@ -119,7 +121,7 @@ impl<Iter: Iterator, State> Iterator for CustomIter<Iter, State> {
 pub fn update_state<Iter, State, Err>(
     f: impl Fn(&mut State)
 )
-    -> impl Fn(&mut CustomIter<Iter, State>) -> Result<(), Err>
+    -> parser![CustomIter<Iter, State>, Err, ()]
 {
     move |iter| { f(&mut iter.state); Result::Ok(()) }
 }
@@ -127,13 +129,13 @@ pub fn update_state<Iter, State, Err>(
 pub fn set_state<Iter, State, Err>(
     prod: impl Fn() -> State
 )
-    -> impl Fn(&mut CustomIter<Iter, State>) -> Result<(), Err>
+    -> parser![CustomIter<Iter, State>, Err, ()]
 {
     move |iter| { iter.state = prod(); Result::Ok(()) }
 }
 
 pub const fn get_state<Iter, State: Clone, Err>()
-    -> impl Fn(&mut CustomIter<Iter, State>) -> Result<State, Err>
+    -> parser![CustomIter<Iter, State>, Err, State]
 {
     move |iter| Result::Ok(iter.state.clone())
 }
