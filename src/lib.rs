@@ -1,11 +1,11 @@
 #![feature(iter_next_chunk)]
 
-mod monadic;
-mod errors;
-mod builders;
-mod combinators;
-mod utils;
-mod state;
+pub mod monadic;
+pub mod errors;
+pub mod builders;
+pub mod combinators;
+pub mod utils;
+pub mod state;
 
 // parser: impl Fn(&mut: Iter) -> Result<Res, Err>
 
