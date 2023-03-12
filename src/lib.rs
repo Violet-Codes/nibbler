@@ -1,4 +1,5 @@
 #![feature(iter_next_chunk)]
+#![feature(decl_macro)]
 
 pub mod monadic;
 pub mod errors;
@@ -9,26 +10,23 @@ pub mod state;
 
 // parser: impl Fn(&mut: Iter) -> Result<Res, Err>
 
-#[macro_export]
-macro_rules! parser {
+pub macro parser {
     ($iter:ty, $err:ty, $t:ty) => (impl Fn(&mut $iter) -> Result<$t, $err>)
 }
 
 // <|>
-#[macro_export]
-macro_rules! alternative {
-    ($x:expr) => ($x);
+pub macro alternative {
+    ($x:expr) => ($x),
     ($x:expr, $($xs:expr), +) => (
-        crate::monadic::otherwise($x, alternative!($($xs), +))
+        $crate::monadic::otherwise($x, alternative!($($xs), +))
     )
 }
 
 // <*
-#[macro_export]
-macro_rules! first {
-    ($x:expr) => ($x);
+pub macro first {
+    ($x:expr) => ($x),
     ($x:expr, $($xs:expr), +) => (
-        crate::monadic::fmap2(
+        $crate::monadic::fmap2(
             |x0, _x1| x0,
             $x,
             first!($($xs), +)
@@ -37,11 +35,10 @@ macro_rules! first {
 }
 
 // *>
-#[macro_export]
-macro_rules! last {
-    ($x:expr) => ($x);
+pub macro last {
+    ($x:expr) => ($x),
     ($x:expr, $($xs:expr), +) => (
-        crate::monadic::fmap2(
+        $crate::monadic::fmap2(
             |_x0, x1| x1,
             $x,
             last!($($xs), +)
@@ -50,8 +47,7 @@ macro_rules! last {
 }
 
 // *> <*
-#[macro_export]
-macro_rules! select {
+pub macro select {
     ($($xs:expr), *, => $y:expr, $($zs:expr), *) => (
         first!(last!($($xs), *, $y), $($zs), *)
     )
