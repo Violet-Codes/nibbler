@@ -21,8 +21,8 @@ pub const fn run<Iter, Jter, Err, T, U>(
 
 #[derive(Clone)]
 pub struct CountIter<Iter> {
-    iter: Iter,
-    munched: usize
+    pub iter: Iter,
+    pub munched: usize
 }
 
 impl<Iter: Iterator> Iterator for CountIter<Iter> {
@@ -45,8 +45,8 @@ pub const fn count<Iter, Err>()
 
 #[derive(Clone)]
 pub struct StackIter<Iter, Symbol> {
-    iter: Iter,
-    stack: Vec<Symbol>
+    pub iter: Iter,
+    pub stack: Vec<Symbol>
 }
 
 impl<Iter: Iterator, Symbol> Iterator for StackIter<Iter, Symbol> {
@@ -106,8 +106,8 @@ pub const fn stack_pop<Iter, Symbol: Clone + PartialEq, Err>(
 
 #[derive(Clone)]
 pub struct CustomIter<Iter, State> {
-    iter: Iter,
-    state: State
+    pub iter: Iter,
+    pub state: State
 }
 
 impl<Iter: Iterator, State> Iterator for CustomIter<Iter, State> {

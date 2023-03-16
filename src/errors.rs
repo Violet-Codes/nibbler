@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use super::parser;
 
 pub const fn fail<Iter, Err, T>(
@@ -15,6 +17,18 @@ pub const fn fmap_err<Iter, Err, Frr, T>(
     -> parser![Iter, Frr, T]
 {
     move |iter| parser(iter).map_err(& f)
+}
+
+pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
+    f: impl Fn(&Iter) -> G,
+    parser: parser![Iter, Err, T]
+)
+    -> parser![Iter, Frr, T]
+{
+    move |iter| {
+        let g = f(iter);
+        parser(iter).map_err(g)
+    }
 }
 
 pub const fn try_parse<Iter: Clone, Err, T>(
@@ -91,4 +105,139 @@ pub const fn use_lst_err<Iter, Err, T>(
     -> parser![Iter, Err, T]
 {
     move |iter| parser(iter).map_err(|mut errs| errs.remove(errs.len() - 1))
+}
+
+#[derive(Debug, Clone)]
+pub enum ParseError<Info>{
+    Silent,
+    Message(String, Info),
+    Contextual(String, Info, Box<Self>),
+    ErrBundle(Vec<Self>),
+    ErrChoice(Vec<Self>)
+}
+
+pub fn truncate_parse_err<Info>(
+    err: ParseError<Info>
+)
+    -> ParseError<Info>
+{
+    match err {
+        ParseError::Silent => ParseError::Silent,
+        ParseError::Message(name, info) => ParseError::Message(name, info),
+        ParseError::Contextual(name, info, _ctx) => ParseError::Message(name, info),
+        ParseError::ErrBundle(errs) => ParseError::ErrBundle(errs.into_iter().map(truncate_parse_err).collect()),
+        ParseError::ErrChoice(errs) => ParseError::ErrChoice(errs.into_iter().map(truncate_parse_err).collect()),
+    }
+}
+
+pub fn bundle<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    fmap_err(|errs| ParseError::ErrBundle(errs), parser)
+}
+
+pub fn label<Iter, Info, T>(
+    name: String,
+    info_getter: impl Fn(&Iter) -> Info,
+    parser: parser![Iter, ParseError<Info>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    fmap_err_with_state(
+        move |iter| {
+            let info: Info = info_getter(iter);
+            let name_clone = name.clone();
+            |err| match err {
+                ParseError::Silent => ParseError::Message(name_clone, info),
+                err_ => ParseError::Contextual(name_clone, info, Box::new(err_))
+            }
+        },
+        parser
+    )
+}
+
+pub fn display_full_choice<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    fmap_err(
+        |mut errs| {
+            errs = errs
+                .into_iter()
+                .filter_map(
+                    |err| match err {
+                        ParseError::Silent => None,
+                        _err => Some(_err)
+                    }
+                )
+                .collect();
+            if errs.len() != 0 {
+                ParseError::ErrChoice(errs)
+            } else {
+                ParseError::Silent
+            }
+        },
+        parser
+    )
+}
+
+pub fn display_fst_choice<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    fmap_err(
+        |mut errs| {
+            errs = errs
+                .into_iter()
+                .filter_map(
+                    |err| match err {
+                        ParseError::Silent => None,
+                        _err => Some(_err)
+                    }
+                )
+                .collect();
+            errs.reverse();
+            if let Some(fst) = errs.pop() {
+                errs = errs.into_iter().map(truncate_parse_err).collect();
+                errs.push(fst);
+                errs.reverse();
+                ParseError::ErrChoice(errs)
+            } else {
+                ParseError::Silent
+            }
+        },
+        parser
+    )
+}
+
+pub fn display_lst_choice<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    fmap_err(
+        |mut errs| {
+            errs = errs
+                .into_iter()
+                .filter_map(
+                    |err| match err {
+                        ParseError::Silent => None,
+                        _err => Some(_err)
+                    }
+                )
+                .collect();
+            if let Some(fst) = errs.pop() {
+                errs = errs.into_iter().map(truncate_parse_err).collect();
+                errs.push(fst);
+                ParseError::ErrChoice(errs)
+            } else {
+                ParseError::Silent
+            }
+        },
+        parser
+    )
 }

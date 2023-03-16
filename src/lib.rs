@@ -17,19 +17,19 @@ pub macro parser {
 // <|>
 pub macro alternative {
     ($x:expr) => ($x),
-    ($x:expr, $($xs:expr), +) => (
-        $crate::monadic::otherwise($x, alternative!($($xs), +))
+    ($x:expr, $($xs:expr),+) => (
+        $crate::monadic::otherwise($x, $crate::alternative!($($xs),+))
     )
 }
 
 // <*
 pub macro first {
     ($x:expr) => ($x),
-    ($x:expr, $($xs:expr), +) => (
+    ($x:expr, $($xs:expr),+) => (
         $crate::monadic::fmap2(
             |x0, _x1| x0,
             $x,
-            first!($($xs), +)
+            $crate::first!($($xs),+)
         )
     )
 }
@@ -37,18 +37,27 @@ pub macro first {
 // *>
 pub macro last {
     ($x:expr) => ($x),
-    ($x:expr, $($xs:expr), +) => (
+    ($x:expr, $($xs:expr),+) => (
         $crate::monadic::fmap2(
             |_x0, x1| x1,
             $x,
-            last!($($xs), +)
+            $crate::last!($($xs),+)
         )
     )
 }
 
 // *> <*
 pub macro select {
-    ($($xs:expr), *, => $y:expr, $($zs:expr), *) => (
-        first!(last!($($xs), *, $y), $($zs), *)
+    ($($xs:expr),+, => $y:expr, $($zs:expr),+) => (
+        $crate::first!($crate::last!($($xs),+, $y), $($zs),+)
+    ),
+    ($($xs:expr),+, => $y:expr) => (
+        $crate::last!($($xs),+, $y)
+    ),
+    (=> $y:expr, $($zs:expr),+) => (
+        $crate::first!($y, $($zs),+)
+    ),
+    (=> $y:expr) => (
+        ($y)
     )
 }
