@@ -16,9 +16,9 @@ pub macro parser {
 
 // <|>
 pub macro alternative {
-    ($x:expr) => ($x),
+    ($x:expr) => ($crate::errors::wrap_err($x)),
     ($x:expr, $($xs:expr),+) => (
-        $crate::monadic::otherwise($x, $crate::alternative!($($xs),+))
+        $crate::monadic::otherwise($crate::errors::wrap_err($x), $crate::alternative!($($xs),+))
     )
 }
 

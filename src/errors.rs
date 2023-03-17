@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use super::parser;
 
 pub const fn fail<Iter, Err, T>(

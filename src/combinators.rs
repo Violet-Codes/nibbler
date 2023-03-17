@@ -1,4 +1,4 @@
-use super::{ alternative, parser, errors::*, monadic::* };
+use super::{ parser, errors::*, monadic::* };
 
 pub const fn most_till<Iter, Err, T, U>(
     parser: parser![Iter, Err, T],
@@ -6,7 +6,7 @@ pub const fn most_till<Iter, Err, T, U>(
 )
     -> parser![Iter, Vec<Err>, (Vec<T>, U)]
 {
-    move |iter| alternative! (
+    move |iter| otherwise(
         fmap2(
             |t, (mut ts, u) | { ts.insert(0, t); (ts, u) },
             wrap_err(& parser),
@@ -25,7 +25,7 @@ pub const fn least_till<Iter, Err, T, U>(
 )
     -> parser![Iter, Vec<Err>, (Vec<T>, U)]
 {
-    move |iter| alternative! (
+    move |iter| otherwise(
         fmap(
             |u| (vec![], u),
             wrap_err(& end)
