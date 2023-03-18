@@ -114,6 +114,37 @@ pub enum ParseError<Info>{
     ErrChoice(Vec<Self>)
 }
 
+fn show_error<Info>(
+    padding: String,
+    show_info: impl Fn(Info) -> String,
+    parse_err: ParseError<Info>
+)
+    -> String
+{
+    match parse_err {
+        ParseError::Silent =>
+            format!("{padding}a silent error occured..."),
+        ParseError::Message(name, info) =>
+            format!("{padding}expected {} {}...", name, show_info(info)),
+        ParseError::Contextual(name, info, err) =>
+            format!("{}\n{padding}...whilst parsing {} {}...", show_error(padding.clone(), & show_info, *err), name, (& show_info)(info)),
+        ParseError::ErrBundle(errs) =>
+            format!(
+                "{}{padding}...grouped here",
+                errs.into_iter().map(|err|
+                    format!("{}\n{padding}|- in error bundle...\n", show_error(format!("{padding}| "), & show_info, err))
+                ).collect::<String>()
+            ),
+        ParseError::ErrChoice(errs) =>
+            format!(
+                "{}{padding}...branching here",
+                errs.into_iter().map(|err|
+                    format!("{}\n{padding}|- in choice...\n", show_error(format!("{padding}| "), & show_info, err))
+                ).collect::<String>()
+            )
+    }
+}
+
 pub fn truncate_parse_err<Info>(
     err: ParseError<Info>
 )
@@ -128,12 +159,12 @@ pub fn truncate_parse_err<Info>(
     }
 }
 
-pub fn bundle<Iter, Info, T>(
+pub const fn bundle<Iter, Info, T>(
     parser: parser![Iter, Vec<ParseError<Info>>, T]
 )
     -> parser![Iter, ParseError<Info>, T]
 {
-    fmap_err(|errs| ParseError::ErrBundle(errs), parser)
+    move |iter| fmap_err(|errs| ParseError::ErrBundle(errs), & parser)(iter)
 }
 
 pub fn label<Iter, Info, T>(
@@ -156,12 +187,12 @@ pub fn label<Iter, Info, T>(
     )
 }
 
-pub fn display_full_choice<Iter, Info, T>(
+pub const fn display_full_choice<Iter, Info, T>(
     parser: parser![Iter, Vec<ParseError<Info>>, T]
 )
     -> parser![Iter, ParseError<Info>, T]
 {
-    fmap_err(
+    move |iter| fmap_err(
         |mut errs| {
             errs = errs
                 .into_iter()
@@ -178,16 +209,16 @@ pub fn display_full_choice<Iter, Info, T>(
                 ParseError::Silent
             }
         },
-        parser
-    )
+        & parser
+    )(iter)
 }
 
-pub fn display_fst_choice<Iter, Info, T>(
+pub const fn display_fst_choice<Iter, Info, T>(
     parser: parser![Iter, Vec<ParseError<Info>>, T]
 )
     -> parser![Iter, ParseError<Info>, T]
 {
-    fmap_err(
+    move |iter| fmap_err(
         |mut errs| {
             errs = errs
                 .into_iter()
@@ -208,16 +239,16 @@ pub fn display_fst_choice<Iter, Info, T>(
                 ParseError::Silent
             }
         },
-        parser
-    )
+        & parser
+    )(iter)
 }
 
-pub fn display_lst_choice<Iter, Info, T>(
+pub const fn display_lst_choice<Iter, Info, T>(
     parser: parser![Iter, Vec<ParseError<Info>>, T]
 )
     -> parser![Iter, ParseError<Info>, T]
 {
-    fmap_err(
+    move |iter| fmap_err(
         |mut errs| {
             errs = errs
                 .into_iter()
@@ -236,6 +267,6 @@ pub fn display_lst_choice<Iter, Info, T>(
                 ParseError::Silent
             }
         },
-        parser
-    )
+        & parser
+    )(iter)
 }
