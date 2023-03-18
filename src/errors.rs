@@ -114,7 +114,7 @@ pub enum ParseError<Info>{
     ErrChoice(Vec<Self>)
 }
 
-fn show_error<Info>(
+pub fn show_error<Info>(
     padding: String,
     show_info: impl Fn(Info) -> String,
     parse_err: ParseError<Info>

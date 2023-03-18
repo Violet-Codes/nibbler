@@ -22,7 +22,7 @@ pub const fn run<Iter, Jter, Err, T, U>(
 #[derive(Clone)]
 pub struct CountIter<Iter> {
     pub iter: Iter,
-    pub munched: usize
+    pub index: usize
 }
 
 impl<Iter: Iterator> Iterator for CountIter<Iter> {
@@ -30,7 +30,7 @@ impl<Iter: Iterator> Iterator for CountIter<Iter> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
-            Option::Some(token) => { self.munched += 1; Option::Some(token) },
+            Option::Some(token) => { self.index += 1; Option::Some(token) },
             Option::None => Option::None
         }
     }
@@ -40,7 +40,7 @@ impl<Iter: Iterator> Iterator for CountIter<Iter> {
 pub const fn count<Iter, Err>()
     -> parser![CountIter<Iter>, Err, usize]
 {
-    |iter| Result::Ok(iter.munched)
+    |iter| Result::Ok(iter.index)
 }
 
 #[derive(Clone)]
