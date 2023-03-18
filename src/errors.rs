@@ -239,10 +239,14 @@ pub const fn display_fst_choice<Iter, Info, T>(
                 .collect();
             errs.reverse();
             if let Some(fst) = errs.pop() {
-                errs = errs.into_iter().map(truncate_parse_err).collect();
-                errs.push(fst);
-                errs.reverse();
-                ParseError::ErrChoice(errs)
+                if errs.len() == 0 {
+                    fst
+                } else {
+                    errs = errs.into_iter().map(truncate_parse_err).collect();
+                    errs.push(fst);
+                    errs.reverse();
+                    ParseError::ErrChoice(errs)
+                }
             } else {
                 ParseError::Silent
             }
@@ -267,10 +271,67 @@ pub const fn display_lst_choice<Iter, Info, T>(
                     }
                 )
                 .collect();
+            if let Some(lst) = errs.pop() {
+                if errs.len() == 0 {
+                    lst
+                } else {
+                    errs = errs.into_iter().map(truncate_parse_err).collect();
+                    errs.push(lst);
+                    ParseError::ErrChoice(errs)
+                }
+            } else {
+                ParseError::Silent
+            }
+        },
+        & parser
+    )(iter)
+}
+
+pub const fn display_fst_nonsilent<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    move |iter| fmap_err(
+        |mut errs| {
+            errs = errs
+                .into_iter()
+                .filter_map(
+                    |err| match err {
+                        ParseError::Silent => None,
+                        _err => Some(_err)
+                    }
+                )
+                .collect();
+            errs.reverse();
             if let Some(fst) = errs.pop() {
-                errs = errs.into_iter().map(truncate_parse_err).collect();
-                errs.push(fst);
-                ParseError::ErrChoice(errs)
+                fst
+            } else {
+                ParseError::Silent
+            }
+        },
+        & parser
+    )(iter)
+}
+
+pub const fn display_lst_nonsilent<Iter, Info, T>(
+    parser: parser![Iter, Vec<ParseError<Info>>, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    move |iter| fmap_err(
+        |mut errs| {
+            errs = errs
+                .into_iter()
+                .filter_map(
+                    |err| match err {
+                        ParseError::Silent => None,
+                        _err => Some(_err)
+                    }
+                )
+                .collect();
+            if let Some(lst) = errs.pop() {
+                lst
             } else {
                 ParseError::Silent
             }
