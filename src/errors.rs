@@ -145,6 +145,14 @@ pub fn show_error<Info>(
     }
 }
 
+pub const fn silence<Iter, Info, Err, T>(
+    parser: parser![Iter, Err, T]
+)
+    -> parser![Iter, ParseError<Info>, T]
+{
+    move |iter| fmap_err(|_err| ParseError::Silent, & parser)(iter)
+}
+
 pub fn truncate_parse_err<Info>(
     err: ParseError<Info>
 )
