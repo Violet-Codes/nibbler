@@ -130,16 +130,16 @@ pub fn show_error<Info>(
             format!("{}\n{padding}...whilst parsing {} {}...", show_error(padding.clone(), show_info, *err), name, (show_info)(info)),
         ParseError::ErrBundle(errs) =>
             format!(
-                "{}{padding}...grouped here",
+                "{}{padding}[ grouped here ]",
                 errs.into_iter().map(|err|
-                    format!("{}\n{padding}|- in error bundle...\n", show_error(format!("{padding}| "), show_info, err))
+                    format!("{}\n{padding}|-[ in error bundle ]\n{}|\n", show_error(format!("{padding}| "), show_info, err), padding)
                 ).collect::<String>()
             ),
         ParseError::ErrChoice(errs) =>
             format!(
-                "{}{padding}...branching here",
+                "{}{padding}[ branching here ]",
                 errs.into_iter().map(|err|
-                    format!("{}\n{padding}|- in choice...\n", show_error(format!("{padding}| "), show_info, err))
+                    format!("{}\n{padding}|-[ in choice ]\n{}|\n", show_error(format!("{padding}| "), show_info, err), padding)
                 ).collect::<String>()
             )
     }
