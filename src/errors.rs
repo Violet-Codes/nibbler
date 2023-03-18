@@ -187,7 +187,7 @@ pub fn label<Iter, Info, T>(
             let info: Info = info_getter(iter);
             let name_clone = name.clone();
             |err| match err {
-                ParseError::Silent => ParseError::Message(name_clone, info),
+                ParseError::Silent => ParseError::Silent,
                 err_ => ParseError::Contextual(name_clone, info, Box::new(err_))
             }
         },
