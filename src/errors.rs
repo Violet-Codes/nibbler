@@ -116,7 +116,7 @@ pub enum ParseError<Info>{
 
 pub fn show_error<Info>(
     padding: String,
-    show_info: impl Fn(Info) -> String,
+    show_info: & impl Fn(Info) -> String,
     parse_err: ParseError<Info>
 )
     -> String
@@ -127,19 +127,19 @@ pub fn show_error<Info>(
         ParseError::Message(name, info) =>
             format!("{padding}expected {} {}...", name, show_info(info)),
         ParseError::Contextual(name, info, err) =>
-            format!("{}\n{padding}...whilst parsing {} {}...", show_error(padding.clone(), & show_info, *err), name, (& show_info)(info)),
+            format!("{}\n{padding}...whilst parsing {} {}...", show_error(padding.clone(), show_info, *err), name, (show_info)(info)),
         ParseError::ErrBundle(errs) =>
             format!(
                 "{}{padding}...grouped here",
                 errs.into_iter().map(|err|
-                    format!("{}\n{padding}|- in error bundle...\n", show_error(format!("{padding}| "), & show_info, err))
+                    format!("{}\n{padding}|- in error bundle...\n", show_error(format!("{padding}| "), show_info, err))
                 ).collect::<String>()
             ),
         ParseError::ErrChoice(errs) =>
             format!(
                 "{}{padding}...branching here",
                 errs.into_iter().map(|err|
-                    format!("{}\n{padding}|- in choice...\n", show_error(format!("{padding}| "), & show_info, err))
+                    format!("{}\n{padding}|- in choice...\n", show_error(format!("{padding}| "), show_info, err))
                 ).collect::<String>()
             )
     }
