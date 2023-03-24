@@ -1,2 +1,2 @@
 # nibbler
-A fully customisable - simple and lightweight - monadic parser combinator library
+A simple and lightweight parser combinator library
