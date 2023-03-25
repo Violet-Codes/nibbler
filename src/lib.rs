@@ -7,6 +7,7 @@ pub mod builders;
 pub mod combinators;
 pub mod utils;
 pub mod state;
+pub mod text;
 
 // parser: impl Fn(&mut: Iter) -> Result<Res, Err>
 

@@ -19,7 +19,7 @@ pub const fn run<Iter, Jter, Err, T, U>(
     move |jter| { let mut iter = build(jter); parser(&mut iter).map(|t| combine(&mut iter, t)) }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CountIter<Iter> {
     pub iter: Iter,
     pub index: usize
@@ -43,7 +43,7 @@ pub const fn count<Iter, Err>()
     |iter| Result::Ok(iter.index)
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct StackIter<Iter, Symbol> {
     pub iter: Iter,
     pub stack: Vec<Symbol>
@@ -104,7 +104,7 @@ pub const fn stack_pop<Iter, Symbol: Clone + PartialEq, Err>(
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CustomIter<Iter, State> {
     pub iter: Iter,
     pub state: State
