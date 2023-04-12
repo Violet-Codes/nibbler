@@ -56,7 +56,8 @@ pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>
 
 * `otherwise`
 ```rs
-/// (<|>) Runs the first parser and then, on error, runs the 2nd parser (DOES 👏 NOT 👏 REWIND 👏, use `error::try_parse` for that)
+/// (<|>) Runs the first parser and then, on error, runs the 2nd parser
+/// (DOES 👏 NOT 👏 REWIND 👏, use `error::try_parse` for that)
 pub const fn otherwise<Iter, Err, T>(
     parser0: parser![Iter, Vec<Err>, T],
     parser1: parser![Iter, Vec<Err>, T]
