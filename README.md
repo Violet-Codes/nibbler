@@ -10,7 +10,6 @@ This type is often written with the macro:
 ```rs
 parser![Iter, Err, T]
 ```
-
 This allows you to write simple inline parsers as closures that the library can operate on, these operations include:
 
 ## monad operations
@@ -66,7 +65,7 @@ pub const fn otherwise<Iter, Err, T>(
 ```
 
 ## error handling
-These are used to deal with the "side effects" of the parser type, located in `nibbler::monadic` are:
+These are used to deal with the "side effects" of the parser type, located in `nibbler::errors` are:
 
 * `fail`:
 ```rs
@@ -92,6 +91,28 @@ pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
 // Copies the state before parsing and sets the state back on error path
 pub const fn try_parse<Iter: Clone, Err, T>(
     parser: parser![Iter, Err, T]
+)
+    -> parser![Iter, Err, T];
+```
+
+## error recovery
+These are used to break from the error path and potentially re-enter with more information, located in `nibbler::errors` are:
+
+* `recover_with`:
+```rs
+// Recovers from the error path using the recovery parser and returns the error with the `Err` pattern for result
+pub const fn recover_with<Iter, Err, Frr, T>(
+    parser: parser![Iter, Err, T],
+    recover: parser![Iter, Frr, ()]
+)
+    -> parser![Iter, Frr, Result<T, Err>];
+```
+
+* `flatten_errors`:
+```rs
+// The opposite of `recover_with`; starts the error if the result type pattern `Err`
+pub const fn flatten_errors<Iter, Err, T>(
+    parser: parser![Iter, Err, Result<T, Err>]
 )
     -> parser![Iter, Err, T];
 ```
