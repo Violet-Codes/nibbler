@@ -70,7 +70,7 @@ These are used to deal with the "side effects" of the parser type, located in `n
 
 * `fail`:
 ```rs
-/// Raises an error using the state
+/// Starts the error path using the state
 pub const fn fail<Iter, Err, T>(
     msg: impl Fn(&Iter) -> Err
 )
@@ -111,7 +111,7 @@ pub const fn recover_with<Iter, Err, Frr, T>(
 
 * `flatten_errors`:
 ```rs
-/// The opposite of `recover_with`; starts the error if the result type pattern `Err`
+/// The opposite of `recover_with`; starts the error path if the result type pattern `Err`
 pub const fn flatten_errors<Iter, Err, T>(
     parser: parser![Iter, Err, Result<T, Err>]
 )
