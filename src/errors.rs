@@ -1,5 +1,6 @@
 use super::parser;
 
+/// Starts the error path using the state
 pub const fn fail<Iter, Err, T>(
     msg: impl Fn(&Iter) -> Err
 )
@@ -8,6 +9,7 @@ pub const fn fail<Iter, Err, T>(
     move |iter| Result::Err(msg(iter))
 }
 
+/// Modifies the error on error path (BEFORE 👏 PARSING 👏)
 pub const fn fmap_err<Iter, Err, Frr, T>(
     f: impl Fn(Err) -> Frr,
     parser: parser![Iter, Err, T]
@@ -17,6 +19,7 @@ pub const fn fmap_err<Iter, Err, Frr, T>(
     move |iter| parser(iter).map_err(& f)
 }
 
+/// Modifies the error on error path using the state (BEFORE 👏 PARSING 👏) to generate an `FnOnce` action
 pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
     f: impl Fn(&Iter) -> G,
     parser: parser![Iter, Err, T]
@@ -29,6 +32,7 @@ pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
     }
 }
 
+/// Copies the state before parsing and sets the state back on error path
 pub const fn try_parse<Iter: Clone, Err, T>(
     parser: parser![Iter, Err, T]
 )
@@ -54,6 +58,7 @@ pub const fn negate<Iter, Err, T>(
     }
 }
 
+/// Recovers from the error path using the recovery parser and returns the error with the `Err` pattern for result
 pub const fn recover_with<Iter, Err, Frr, T>(
     parser: parser![Iter, Err, T],
     recover: parser![Iter, Frr, ()]
@@ -69,6 +74,7 @@ pub const fn recover_with<Iter, Err, Frr, T>(
     }
 }
 
+/// The opposite of `recover_with`; starts the error path if the result type pattern `Err`
 pub const fn flatten_errors<Iter, Err, T>(
     parser: parser![Iter, Err, Result<T, Err>]
 )
