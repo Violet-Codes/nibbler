@@ -25,7 +25,7 @@ pub const fn pure<Iter, Err, T>(
     -> parser![Iter, Err, T];
 ```
 
-* `fmap`: includes `fmap2`, `fmap3` and `fmap4`
+* `fmap`: (varients include `fmap2`, `fmap3` and `fmap4`)
 ```rs
 // (<$>) Applies a function to the resultant value
 pub const fn fmap<Iter, Err, T, U>(
@@ -35,7 +35,7 @@ pub const fn fmap<Iter, Err, T, U>(
     -> parser![Iter, Err, U];
 ```
 
-* apply: includes `apply2`, `apply3` and `apply4`
+* apply: (varients include `apply2`, `apply3` and `apply4`)
 ```rs
 // (<*>) Applies the result of the 1st parser to the result from the 2nd parser
 pub const fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
@@ -45,7 +45,7 @@ pub const fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
     -> parser![Iter, Err, U];
 ```
 
-* `bind`: includes `bind2`, `bind3` and `bind4`
+* `bind`: (varients include `bind2`, `bind3` and `bind4`)
 ```rs
 // (>>=) applies a function after parsing and then runs the result as its own parser
 pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
@@ -56,18 +56,11 @@ pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>
 ```
 
 * `alternative`
+```rs
 // (<|>) Runs the first parser and then, on error, runs the 2nd parser (does NOT rewind, use `error::try_parse` for that)
 pub const fn otherwise<Iter, Err, T>(
     parser0: parser![Iter, Vec<Err>, T],
     parser1: parser![Iter, Vec<Err>, T]
 )
-    -> parser![Iter, Vec<Err>, T]
-{
-    move |iter| match parser0(iter) {
-        Result::Ok(t) => Result::Ok(t),
-        Result::Err(mut err0) => match parser1(iter) {
-            Result::Ok(t) => Result::Ok(t),
-            Result::Err(mut err1) => Result::Err({ err0.append(&mut err1); err0 })
-        }
-    }
-}
+    -> parser![Iter, Vec<Err>, T];
+```
