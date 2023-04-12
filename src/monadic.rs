@@ -1,6 +1,6 @@
 use super::parser;
 
-// pure
+/// (pure) Turns a producer into a trivial parser
 pub const fn pure<Iter, Err, T>(
     prod: impl Fn() -> T
 )
@@ -9,7 +9,7 @@ pub const fn pure<Iter, Err, T>(
     move |_iter| Result::Ok(prod())
 }
 
-// <$>
+/// (<$>) Applies a function to the resultant value
 pub const fn fmap<Iter, Err, T, U>(
     f: impl Fn(T) -> U,
     parser: parser![Iter, Err, T]
@@ -94,7 +94,7 @@ pub const fn fmap4<Iter, Err, T0, T1, T2, T3, U>(
     })()
 }
 
-// <*>
+/// (<*>) Applies the result of the 1st parser to the result from the 2nd parser
 pub const fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
     f_parser: parser![Iter, Err, F],
     t_parser: parser![Iter, Err, T]
@@ -191,7 +191,7 @@ pub const fn apply4<Iter, Err, T0, T1, T2, T3, U, F: FnOnce(T0, T1, T2, T3) -> U
     }
 }
 
-// >>=
+/// (>>=) Applies a function after parsing and then runs the result as its own parser
 pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
     parser: parser![Iter, Err, T],
     f: impl Fn(T) -> UParser
@@ -279,7 +279,8 @@ pub const fn bind4<Iter, Err, T0, T1, T2, T3, U, UParser: FnOnce(&mut Iter) -> R
     })()
 }
 
-// <|>
+/// (<|>) Runs the first parser and then, on error, runs the 2nd parser
+/// (DOES 👏 NOT 👏 REWIND 👏, use `error::try_parse` for that)
 pub const fn otherwise<Iter, Err, T>(
     parser0: parser![Iter, Vec<Err>, T],
     parser1: parser![Iter, Vec<Err>, T]
