@@ -13,8 +13,8 @@ parser![Iter, Err, T]
 
 This allows you to write simple inline parsers as closures that the library can operate on, these operations include:
 
-### monad operations
-From `nibbler::monadic`:
+## monad operations
+These are used to deal with the "side effects" of the parser type, located in `nibbler::monadic` are:
 
 * `pure`:
 ```rs
@@ -47,7 +47,7 @@ pub const fn apply<Iter, Err, T, U, F: FnOnce(T) -> U>(
 
 * `bind`: (varients include `bind2`, `bind3` and `bind4`)
 ```rs
-// (>>=) applies a function after parsing and then runs the result as its own parser
+// (>>=) Applies a function after parsing and then runs the result as its own parser
 pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>(
     parser: parser![Iter, Err, T],
     f: impl Fn(T) -> UParser
@@ -63,4 +63,35 @@ pub const fn otherwise<Iter, Err, T>(
     parser1: parser![Iter, Vec<Err>, T]
 )
     -> parser![Iter, Vec<Err>, T];
+```
+
+## error handling
+These are used to deal with the "side effects" of the parser type, located in `nibbler::monadic` are:
+
+* `fail`:
+```rs
+// Raises an error using the state
+pub const fn fail<Iter, Err, T>(
+    msg: impl Fn(&Iter) -> Err
+)
+    -> parser![Iter, Err, T];
+```
+
+ * `fmap_err_with_state`: (simple case is: `fmap_err`)
+```rs
+// Modifies the error on error path using the state (BEFORE PARSING) to generate an `FnOnce` action
+pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
+    f: impl Fn(&Iter) -> G,
+    parser: parser![Iter, Err, T]
+)
+    -> parser![Iter, Frr, T];
+```
+
+* `try_parse`:
+```rs
+// Copies the state before parsing and sets the state back on error path
+pub const fn try_parse<Iter: Clone, Err, T>(
+    parser: parser![Iter, Err, T]
+)
+    -> parser![Iter, Err, T];
 ```
