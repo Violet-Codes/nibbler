@@ -55,9 +55,9 @@ pub const fn bind<Iter, Err, T, U, UParser: FnOnce(&mut Iter) -> Result<U, Err>>
     -> parser![Iter, Err, U];
 ```
 
-* `alternative`
+* `otherwise`
 ```rs
-// (<|>) Runs the first parser and then, on error, runs the 2nd parser (does NOT rewind, use `error::try_parse` for that)
+// (<|>) Runs the first parser and then, on error, runs the 2nd parser (DOES 👏 NOT 👏 REWIND 👏, use `error::try_parse` for that)
 pub const fn otherwise<Iter, Err, T>(
     parser0: parser![Iter, Vec<Err>, T],
     parser1: parser![Iter, Vec<Err>, T]
@@ -79,7 +79,7 @@ pub const fn fail<Iter, Err, T>(
 
  * `fmap_err_with_state`: (simple case is: `fmap_err`)
 ```rs
-// Modifies the error on error path using the state (BEFORE PARSING) to generate an `FnOnce` action
+// Modifies the error on error path using the state (BEFORE 👏 PARSING 👏) to generate an `FnOnce` action
 pub const fn fmap_err_with_state<Iter, Err, Frr, T, G: FnOnce(Err) -> Frr>(
     f: impl Fn(&Iter) -> G,
     parser: parser![Iter, Err, T]
